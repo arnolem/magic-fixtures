@@ -1,0 +1,25 @@
+{
+    "name": "arnolem/magic-fixtures",
+    "type": "library",
+    "license": "MIT",
+    "homepage": "https://www.wixiweb.fr",
+    "keywords": ["fixture", "data", "test", "faker", "database", "environment", "env"],
+    "description": "Easy Fixtures generator",
+    "minimum-stability": "dev",
+    "prefer-stable": false,
+    "authors": [
+        {
+            "name": "Arnaud Lemercier",
+            "email": "arnaud@wixiweb.fr"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "psr/container": "2.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Arnolem\\MagicFixtures\\": "src/"
+        }
+    }
+}
