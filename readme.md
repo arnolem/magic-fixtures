@@ -17,6 +17,10 @@ composer req --dev arnolem/magic-fixtures
  - Fixtures are automatically loaded from a directory.
  - Fixtures are compatible with ``Psr\Container\ContainerInterface`` to integrate with all frameworks.
  - It manages the dependencies between fixtures using the needs() method.
+ - The created objects can be stored for use in other fixtures.
+ - The objects can be retrieved by identifier, but also by class, by tag, or randomly.
+ - Randomly retrieve objects that match a tag.
+ - Integration of Faker to generate fake data.
 
 ## Usage
 
@@ -67,22 +71,22 @@ namespace Tests\Fixture;
 use App\Domain\Account;
 use App\Domain\Company;
 use App\Infrastructure\AccountPersister;
-use Arnolem\MagicFixtures\Interface\Fixture;
-use Psr\Container\ContainerInterface;
+use Arnolem\MagicFixtures\Fixture;
 
-readonly class AccountFixture implements Fixture
+readonly class AccountFixture extends Fixture
 {
 
-    public function __construct(
-        private ContainerInterface $container
-    ) {
+    public function __construct()
+    {
+        $this->accountPersister = $this->getService(AccountPersister::class);
     }
 
     public function execute(): void
     {
         $account = new Account(
-            firstname : 'Arnaud',
-            name : 'Lemercier',
+            firstname: 'Arnaud',
+            name: 'Lemercier',
+            company: $this->getRandomReference(Company::class);
         );
         
         $this->accountPersister->save($account);
@@ -103,25 +107,43 @@ Another depends Fixture
 namespace Tests\Fixture;
 
 use App\Domain\Company;
-use App\Infrastructure\AccountPersister;
-use Arnolem\MagicFixtures\Interface\Fixture;
-use Psr\Container\ContainerInterface;
+use App\Infrastructure\CompanyPersister;
+use Arnolem\MagicFixtures\Fixture;
 
-readonly class CompanyFixture implements Fixture
+readonly class CompanyFixture extends Fixture
 {
 
-    public function __construct(
-        private ContainerInterface $container
-    ) {
+    public function __construct()
+    {
+        $this->companyPersister = $this->getService(CompanyPersister::class);
     }
 
     public function execute(): void
     {
+    
+        // Create a default and activated company
         $company = new Company(
-            name : 'Wixiweb',
+            id: 0
+            name: 'Wixiweb',
+            isActivate: true,
         );
         
         $this->companyPersister->save($company);
+        $this->addReference($company, $company->getId(), ['activate', 'default']);
+            
+        // Create others 10 inactivates companies
+        for ($idCompany = 1; $idCompany <= 10; $idCompany++) {
+        
+            $company = new Company(
+                id: $idCompany
+                name: $this->faker->company(),
+                isActivate: false,
+            );
+            
+            $this->companyPersister->save($company);
+            $this->addReference($company, $company->getId();
+        }
+        
     }
 }
 ```

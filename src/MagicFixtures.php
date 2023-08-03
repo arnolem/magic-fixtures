@@ -1,10 +1,12 @@
-<?php
+<?php /** @noinspection PhpUnused */
 
 namespace Arnolem\MagicFixtures;
 
-use Arnolem\MagicFixtures\Exception\ClassNotFixture;
-use Arnolem\MagicFixtures\Exception\DirectoryNotExist;
-use Arnolem\MagicFixtures\Interface\Fixture;
+use Arnolem\MagicFixtures\Exception\ClassNotFixtureException;
+use Arnolem\MagicFixtures\Exception\DirectoryNotExistException;
+use Arnolem\MagicFixtures\Interface\FixtureInterface;
+use Faker\Factory;
+use Faker\Generator;
 use Iterator;
 use Psr\Container\ContainerInterface;
 use RecursiveDirectoryIterator;
@@ -17,17 +19,21 @@ use function in_array;
 class MagicFixtures
 {
     private array $fixtures = [];
+    private Generator $faker;
+    private ObjectStorage $objectStorage;
 
     public function __construct(
-        readonly private ContainerInterface $container
+        ContainerInterface $container
     ) {
+        Fixture::setContainer($container);
+        $this->faker         = Factory::create('fr_FR');
+        $this->objectStorage = new ObjectStorage();
     }
-
 
     public function loadFromDirectory(string $path): void
     {
-        if (!is_dir($path)) {
-            throw new DirectoryNotExist($path);
+        if ( ! is_dir($path)) {
+            throw new DirectoryNotExistException($path);
         }
 
         $iterator = new RecursiveIteratorIterator(
@@ -71,22 +77,26 @@ class MagicFixtures
             }
 
             // Continue if is not a Fixture
-            if (!$reflexion->implementsInterface(Fixture::class)) {
+            if ( ! $reflexion->implementsInterface(FixtureInterface::class)) {
                 continue;
             }
 
             // Continue if not instantiable
-            if (!$reflexion->isInstantiable()) {
+            if ( ! $reflexion->isInstantiable()) {
                 continue;
             }
 
             // Continue if not a included fixtures
             $sourceFile = $reflexion->getFileName();
-            if (!in_array($sourceFile, $includedFiles, true)) {
+            if ( ! in_array($sourceFile, $includedFiles, true)) {
                 continue;
             }
 
-            $this->fixtures[] = new $class($this->container);
+            /** @var Fixture $object */
+            $object = new $class;
+            $object->setFaker($this->faker);
+            $object->setObjectStorage($this->objectStorage);
+            $this->fixtures[] = $object;
         }
     }
 
@@ -123,8 +133,8 @@ class MagicFixtures
             }
 
             // Error if is not a Fixture
-            if (!$reflexion->implementsInterface(Fixture::class)) {
-                throw new ClassNotFixture($fixtureName);
+            if ( ! $reflexion->implementsInterface(FixtureInterface::class)) {
+                throw new ClassNotFixtureException($fixtureName);
             }
 
             // Get needFixture for this fixture
