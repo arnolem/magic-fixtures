@@ -4,7 +4,7 @@ namespace Arnolem\MagicFixtures\Exception;
 
 use InvalidArgumentException;
 
-class DirectoryNotExist extends InvalidArgumentException
+class DirectoryNotExistException extends InvalidArgumentException
 {
     public function __construct(string $path)
     {

@@ -4,7 +4,7 @@ namespace Arnolem\MagicFixtures\Exception;
 
 use InvalidArgumentException;
 
-class ClassNotFixture extends InvalidArgumentException
+class ClassNotFixtureException extends InvalidArgumentException
 {
     public function __construct(string $class)
     {

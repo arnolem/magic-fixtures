@@ -5,8 +5,8 @@
     "homepage": "https://www.wixiweb.fr",
     "keywords": ["fixture", "data", "test", "faker", "database", "environment", "env"],
     "description": "Easy Fixtures generator",
-    "minimum-stability": "dev",
-    "prefer-stable": false,
+    "minimum-stability": "stable",
+    "prefer-stable": true,
     "authors": [
         {
             "name": "Arnaud Lemercier",
@@ -15,7 +15,8 @@
     ],
     "require": {
         "php": "^8.2",
-        "psr/container": "2.*"
+        "psr/container": "2.*",
+        "fakerphp/faker": "1.*"
     },
     "autoload": {
         "psr-4": {
