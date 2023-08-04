@@ -10,13 +10,23 @@ use RuntimeException;
 
 class Fixture implements FixtureInterface
 {
-    protected static ContainerInterface $container;
+    protected ContainerInterface $container;
     protected Faker $faker;
     private ObjectStorage $objectStorage;
+
+    public function setUp(): void
+    {
+        // Nothing on parent
+    }
 
     public function getFaker(): Faker
     {
         return $this->faker;
+    }
+
+    public function setFaker(Faker $faker): void
+    {
+        $this->faker = $faker;
     }
 
     /**
@@ -24,21 +34,21 @@ class Fixture implements FixtureInterface
      */
     public function getService(string $id)
     {
-        if ( ! self::getContainer()->has($id)) {
+        if ( ! $this->getContainer()->has($id)) {
             throw new ServiceNotFoundException($id);
         }
 
-        return self::getContainer()->get($id);
+        return $this->getContainer()->get($id);
     }
 
-    public static function getContainer(): ContainerInterface
+    public function getContainer(): ContainerInterface
     {
-        return self::$container;
+        return $this->container;
     }
 
-    public static function setContainer(ContainerInterface $container): void
+    public function setContainer(ContainerInterface $container): void
     {
-        self::$container = $container;
+        $this->container = $container;
     }
 
     public function addReference(object $object, string $key, array $tags = null): void
@@ -59,11 +69,6 @@ class Fixture implements FixtureInterface
     public function getAllReference(string $className, array $tags = null): array
     {
         return $this->objectStorage->find($className, $tags);
-    }
-
-    public function setFaker(Faker $faker): void
-    {
-        $this->faker = $faker;
     }
 
     public function execute(): void

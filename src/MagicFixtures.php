@@ -21,11 +21,12 @@ class MagicFixtures
     private array $fixtures = [];
     private Generator $faker;
     private ObjectStorage $objectStorage;
+    private ContainerInterface $container;
 
     public function __construct(
         ContainerInterface $container
     ) {
-        Fixture::setContainer($container);
+        $this->container     = $container;
         $this->faker         = Factory::create('fr_FR');
         $this->objectStorage = new ObjectStorage();
     }
@@ -96,7 +97,9 @@ class MagicFixtures
             $object = new $class;
             $object->setFaker($this->faker);
             $object->setObjectStorage($this->objectStorage);
-            $this->fixtures[] = $object;
+            $object->setContainer($this->container);
+
+            $this->fixtures[$class] = $object;
         }
     }
 
@@ -104,7 +107,9 @@ class MagicFixtures
     {
         $fixtures = $this->getOrderedFixtures();
 
+        /** @var FixtureInterface $fixture */
         foreach ($fixtures as $fixture) {
+            $fixture->setUp();
             $fixture->execute();
         }
     }

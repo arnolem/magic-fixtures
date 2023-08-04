@@ -6,7 +6,9 @@ use Psr\Container\ContainerInterface;
 
 interface FixtureInterface
 {
-    public static function setContainer(ContainerInterface $container): void;
+    public function setContainer(ContainerInterface $container): void;
+
+    public function setUp(): void;
 
     public function execute(): void;
 
