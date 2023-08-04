@@ -2,6 +2,7 @@
 
 namespace Arnolem\MagicFixtures;
 
+use Arnolem\MagicFixtures\ObjectStorage\Exception\NoObjectFoundException;
 use Arnolem\MagicFixtures\ObjectStorage\Item;
 use ArrayObject;
 use function in_array;
@@ -71,9 +72,13 @@ class ObjectStorage
         return $this->getClassNameStorage($className)->offsetGet($key);
     }
 
-    public function findRandom(string $className, ?array $tags): object
+    public function findRandom(string $className, ?array $tags=null): object
     {
         $objectList = $this->find($className, $tags);
+
+        if(empty($objectList)){
+            throw new NoObjectFoundException($className, $tags);
+        }
 
         return $objectList[array_rand($objectList)];
     }
