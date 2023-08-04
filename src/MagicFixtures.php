@@ -21,11 +21,12 @@ class MagicFixtures
     private array $fixtures = [];
     private Generator $faker;
     private ObjectStorage $objectStorage;
+    private ContainerInterface $container;
 
     public function __construct(
         ContainerInterface $container
     ) {
-        Fixture::setContainer($container);
+        $this->container     = $container;
         $this->faker         = Factory::create('fr_FR');
         $this->objectStorage = new ObjectStorage();
     }
@@ -96,7 +97,9 @@ class MagicFixtures
             $object = new $class;
             $object->setFaker($this->faker);
             $object->setObjectStorage($this->objectStorage);
-            $this->fixtures[] = $object;
+            $object->setContainer($this->container);
+
+            $this->fixtures[$class] = $object;
         }
     }
 
@@ -104,13 +107,15 @@ class MagicFixtures
     {
         $fixtures = $this->getOrderedFixtures();
 
+        /** @var FixtureInterface $fixture */
         foreach ($fixtures as $fixture) {
+            $fixture->setUp();
             $fixture->execute();
         }
     }
 
     /**
-     * @return array<Fixture>
+     * @return array
      * @throws ReflectionException
      * @todo : Throw an exception for infinite loop (circular reference)
      */
@@ -118,52 +123,60 @@ class MagicFixtures
     {
         $orderedFixtures = [];
 
-        // add recursively fixture in order
-        $resolve = static function (string $fixtureName) use (&$resolve, &$orderedFixtures) {
-
-            // Return if this fixture is resolved
-            if (in_array($fixtureName, $orderedFixtures, true)) {
-                return;
-            }
-
-            try {
-                $reflexion = new ReflectionClass($fixtureName);
-            } catch (ReflectionException) {
-                return;
-            }
-
-            // Error if is not a Fixture
-            if ( ! $reflexion->implementsInterface(FixtureInterface::class)) {
-                throw new ClassNotFixtureException($fixtureName);
-            }
-
-            // Get needFixture for this fixture
-            if ($reflexion->hasMethod('needs')) {
-                $needs = $reflexion->newInstanceWithoutConstructor()->needs();
-            } else {
-                $needs = [];
-            }
-
-            foreach ($needs as $needFixtureName) {
-                // Return if need fixture is resolved
-                if (in_array($needFixtureName, $orderedFixtures, true)) {
-                    continue;
-                }
-                // Resolve need fixture recursively
-                $resolve($needFixtureName);
-            }
-
-            // Mark this fixture resolved
-            $orderedFixtures[] = $fixtureName;
-
-        };
-
         /** @var Fixture $fixture */
         foreach ($this->fixtures as $fixture) {
             // Apply resolver on each fixture to ordered
-            $resolve(get_class($fixture));
+            self::resolveNeeds(get_class($fixture), $orderedFixtures);
         }
 
-        return $this->fixtures;
+        $fixtures = [];
+        foreach ($orderedFixtures as $fixtureName) {
+            $fixtures[] = $this->fixtures[$fixtureName];
+        }
+
+        return $fixtures;
+    }
+
+    public static function resolveNeeds($fixtureName, &$orderedFixtures): void
+    {
+        // Return if this fixture is resolved
+        if (in_array($fixtureName, $orderedFixtures, true)) {
+            return;
+        }
+
+        try {
+            $reflexion = new ReflectionClass($fixtureName);
+        } catch (ReflectionException) {
+            return;
+        }
+
+        // Error if is not a Fixture
+        if ( ! $reflexion->implementsInterface(FixtureInterface::class)) {
+            throw new ClassNotFixtureException($fixtureName);
+        }
+
+        // Get needFixture for this fixture
+        if ($reflexion->hasMethod('needs')) {
+            $needs = $reflexion->newInstanceWithoutConstructor()->needs();
+        } else {
+            $needs = [];
+        }
+
+        foreach ($needs as $needFixtureName) {
+            // Return if need fixture is resolved
+            if (in_array($needFixtureName, $orderedFixtures, true)) {
+                continue;
+            }
+            // Resolve need fixture recursively
+            self::resolveNeeds($needFixtureName, $orderedFixtures);
+        }
+
+        // Mark this fixture resolved
+        $orderedFixtures[] = $fixtureName;
+    }
+
+    public function getObjectStorage(): ObjectStorage
+    {
+        return $this->objectStorage;
     }
 }
