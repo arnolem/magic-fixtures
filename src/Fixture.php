@@ -51,7 +51,7 @@ class Fixture implements FixtureInterface
         $this->container = $container;
     }
 
-    public function addReference(object $object, string $key, array $tags = null): void
+    public function addReference(object $object, string $key, ?array $tags = null): void
     {
         $this->objectStorage->add($object, $key, $tags);
     }
@@ -61,12 +61,12 @@ class Fixture implements FixtureInterface
         return $this->objectStorage->get($className, $key);
     }
 
-    public function getRandomReference(string $className, array $tags = null): object
+    public function getRandomReference(string $className, ?array $tags = null): object
     {
         return $this->objectStorage->findRandom($className, $tags);
     }
 
-    public function getAllReference(string $className, array $tags = null): array
+    public function getAllReference(string $className, ?array $tags = null): array
     {
         return $this->objectStorage->find($className, $tags);
     }

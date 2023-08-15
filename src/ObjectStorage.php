@@ -72,18 +72,18 @@ class ObjectStorage
         return $this->getClassNameStorage($className)->offsetGet($key);
     }
 
-    public function findRandom(string $className, ?array $tags=null): object
+    public function findRandom(string $className, ?array $tags = null): object
     {
         $objectList = $this->find($className, $tags);
 
-        if(empty($objectList)){
+        if (empty($objectList)) {
             throw new NoObjectFoundException($className, $tags);
         }
 
         return $objectList[array_rand($objectList)];
     }
 
-    public function find(string $className, ?array $tags): array
+    public function find(string $className, ?array $tags = null): array
     {
         $itemList = [];
 
