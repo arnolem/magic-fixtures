@@ -31,6 +31,11 @@ class MagicFixtures
         $this->objectStorage = new ObjectStorage();
     }
 
+    public function getFaker(): Generator
+    {
+        return $this->faker;
+    }
+
     public function loadFromDirectory(string $path): void
     {
         if ( ! is_dir($path)) {
